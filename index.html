@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Business Check Printer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- SIDEBAR / FORM -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-mark">✦</div>
+      <h1>Check<br/><em>Printer</em></h1>
+      <p class="tagline">Business Check Formatter</p>
+    </div>
+
+    <form id="checkForm" autocomplete="off">
+
+      <section class="form-section">
+        <h2 class="section-title">Account Info</h2>
+
+        <div class="field">
+          <label>Company / Payee From</label>
+          <input type="text" id="companyName" placeholder="ACME Corporation" value="" />
+        </div>
+        <div class="field">
+          <label>Address Line 1</label>
+          <input type="text" id="address1" placeholder="123 Main Street" />
+        </div>
+        <div class="field">
+          <label>Address Line 2</label>
+          <input type="text" id="address2" placeholder="Suite 100, New York NY 10001" />
+        </div>
+        <div class="field">
+          <label>Phone (optional)</label>
+          <input type="text" id="phone" placeholder="(212) 555-0100" />
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h2 class="section-title">Bank Details</h2>
+
+        <div class="field">
+          <label>Bank Name</label>
+          <input type="text" id="bankName" placeholder="First National Bank" />
+        </div>
+        <div class="field">
+          <label>Routing Number (9 digits)</label>
+          <input type="text" id="routingNum" maxlength="9" placeholder="021000021" />
+          <span class="hint">Must be exactly 9 digits</span>
+        </div>
+        <div class="field">
+          <label>Account Number</label>
+          <input type="text" id="accountNum" maxlength="17" placeholder="123456789" />
+        </div>
+        <div class="field">
+          <label>Starting Check Number</label>
+          <input type="number" id="checkNum" value="1001" min="1" max="99999" />
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h2 class="section-title">Payment Details</h2>
+
+        <div class="field">
+          <label>Pay To The Order Of</label>
+          <input type="text" id="payee" placeholder="John Smith" />
+        </div>
+        <div class="field field-row">
+          <div>
+            <label>Amount ($)</label>
+            <input type="number" id="amount" step="0.01" min="0" placeholder="0.00" />
+          </div>
+          <div>
+            <label>Date</label>
+            <input type="date" id="checkDate" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Memo / For</label>
+          <input type="text" id="memo" placeholder="Invoice #1234" />
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h2 class="section-title">Layout</h2>
+        <div class="field">
+          <label>Check Style</label>
+          <select id="checkStyle">
+            <option value="top">Top Check (standard business)</option>
+            <option value="middle">Middle Check</option>
+            <option value="bottom">Bottom Check</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Signature Line Label</label>
+          <input type="text" id="sigLabel" value="Authorized Signature" />
+        </div>
+      </section>
+
+      <div class="actions">
+        <button type="button" id="btnPreview" class="btn-secondary">Preview</button>
+        <button type="button" id="btnPrint" class="btn-primary">Print Check</button>
+      </div>
+
+    </form>
+  </aside>
+
+  <!-- PREVIEW PANEL -->
+  <main class="preview-panel">
+    <div class="preview-toolbar">
+      <span class="preview-label">Live Preview — 6″ × 2.75″ Business Check</span>
+      <div class="zoom-controls">
+        <button id="zoomOut">−</button>
+        <span id="zoomVal">100%</span>
+        <button id="zoomIn">+</button>
+      </div>
+    </div>
+
+    <div class="preview-canvas" id="previewCanvas">
+      <div class="check-wrapper" id="checkWrapper">
+        <!-- The actual check is rendered here by JS -->
+        <div id="checkOut"></div>
+      </div>
+    </div>
+
+    <div class="preview-note">
+      Numbers in the MICR line use standard E-13B encoding symbols.<br/>
+      Print on blank check stock at <strong>100% scale, no scaling</strong>.
+    </div>
+  </main>
+
+  <!-- PRINT FRAME (hidden) -->
+  <iframe id="printFrame" style="display:none;"></iframe>
+
+  <!-- Print styles injected into print iframe by JS -->
+  <style id="printStyles" type="text/plain">
+    @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+    @font-face {
+      font-family: 'MICR E13B';
+      src: url('data:font/truetype;base64,AAEAAAAOAIAAAwBgT1MvMhCkNOgAABVsAAAATlBDTFQlayRdAAAH4AAAADZjbWFwMkJFCwAAAOwAAAG8Y3Z0IAcIBMwAAAKoAAAALGZwZ20CEcJhAAAC1AAAAdhnbHlmLFqWpwAACBgAAAy2aGVhZGRFSpoAAASsAAAANmhoZWELUAbUAAAVSAAAACRobXR4ZgAWmgAAFNAAAABYbG9jYQAAlWwAAATkAAAAXG1heHAAtgCSAAAVKAAAACBuYW1lcaxNzQAABawAAAIxcG9zdADjATsAAAVcAAAATnByZXCEBp6ZAAAFQAAAABwAAAACAAEAAAAAABQAAwABAAABGgAAAQYAAAEAAAAAAAAAAQIAAAACAAAAAAAAAAAAAAAAAAAAAQAAFQAAAAAAAAAAAAAAABQAAAwDBAUGBwgJCgsAAAAAAAAADRIRDwAQAAAAAAAAAAAAAAAADgAAAAAAAAAAAAAAEwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABACiAAAABAAEAAEAAABf//8AAAAg//8AAAAAAAQAggAVAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQAAAAAAAwAAwAEAAUABgAHAAgACQAKAAsAAAAAAAAAAAAAAAAAAAANABIAEQAPAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATAAAABgAGAAwABAAQAAb/8gAAAAAAAAAAABQB3wFIAKAAIQKNAd8BSAE/AKAAIUAWFRQTEhEQDw4NDAsKCQgHBgUEAwIBACyyAIAAQyCKYoojQmZWLSyyKgAAQ1R4sAArWBc5WbAAK1gXPFmwACtYsAoqWbABQxCwACtYFzxZsAArWLAKKlktLCstLCuwAiotLLACKi0ssAFisAAjQrEBAyVCIEYgaGFksAMlRiBoILAEQyNhIGSxQECKVFghISEhsQAhHFlQWCEhsQAEJSBGaLAHJUVhsABRWCEbsAVDOFkbYWRZU1gjLyP5Gy8j6VmwASstLLABYrAAI0KxAQMlQiBGIGhhZLADJUYgaGFkU1gjLyP5Gy8j6VmwASstLLABYrAAI0KxAQUlQj/psAErLSywAWKwACNCsQEDJUI/+bABKy0sERIXOS0swS0ssgABAEMgILAEQ4pFsANDYWlgRGBCLSxFILADI0KyAQIFQ3ZDI0OKI2FpYLAEI0IYsAsqLSywACNCGEVpsEBhILAAUVghsEEbsEBhsABRWLBGG7BIWVmwBSNCRSCwASNCabACI0KwDCoYLSwgRWhELSy6ABEABf/AQistLLIRBQBCKy0sICCxAgOKQiOwAWFCRmggsEBUWLBAYFmwBCNCLSyxAgNDEUMSFzkxAC0sLi0sxS0sP7AUKi0AAQAAAAEAAEWntl1fDzz1AAMIAAAAAAAAAAAAAAAAAAAAAAAAAAAABS8FngAAAAYAAgABAAAAAAAAAAAAAABKAAAASgAAAEoAAADuAAAB0AAAArYAAANoAAAESAAABUYAAAYoAAAHPgAACAIAAAiqAAAJiAAACYgAAApSAAAKUgAACxoAAAvsAAAL7AAADLYAAAy2QBIEDgEOFAwNAhQEEwIUFBANMACNuAM8hR0rKwACAAAAAAAA/5wAMgAAAAAAAAAAAAAAAAAAAAAAAAAAABYAAAABAAIAFAAVABYAFwAYABkAGgAbABwAEwAkADYAJwApACYAJQBCABAAAwAAAAAAEADGAAEAAAAAAAAAMQAAAAEAAAAAAAEACQAxAAEAAAAAAAIABgA6AAEAAAAAAAMAGwBAAAEAAAAAAAQAEABbAAEAAAAAAAUAAABrAAEAAAAAAAYADgBrAAEAAAAAAAcAAAB5AAMAAQQJAAAAYgB5AAMAAQQJAAEAEgDbAAMAAQQJAAIADADtAAMAAQQJAAMANgD5AAMAAQQJAAQAIAEvAAMAAQQJAAUAAAFPAAMAAQQJAAYAHAFPAAMAAQQJAAcAAAFrKGMpIENvcHlyaWdodCAxOTk0IEFkdmFudGFnZSBMYXNlciBQcm9kdWN0cywgSW5jIE1JQ1IgRTEzQk5vcm1hbEZvbnRNb25nZXI6TUlDUiBFMTNCIE5vcm1hbE1JQ1IgRTEzQiBOb3JtYWxNSUNSRTEzQk5vcm1hbAAoAGMAKQAgAEMAbwBwAHkAcgBpAGcAaAB0ACAAMQA5ADkANAAgAEEAZAB2AGEAbgB0AGEAZwBlACAATABhAHMAZQByACAAUAByAG8AZAB1AGMAdABzACwAIABJAG4AYwAgAE0ASQBDAFIAIABFADEAMwBCAE4AbwByAG0AYQBsAEYAbwBuAHQATQBvAG4AZwBlAHIAOgBNAEkAQwBSACAARQAxADMAQgAgAE4AbwByAG0AYQBsAE0ASQBDAFIAIABFADEAMwBCACAATgBvAHIAbQBhAGwATQBJAEMAUgBFADEAMwBCAE4AbwByAG0AYQBsAAAAAAEAAIAAAAAGAAAAAAAAAAVOAABNSUNSIEUxM0IgTm9ybWFs/////zf///4AAAAAAAAAAEAAAAAAAgEAAAAFAAUAAAMABwAiQBsPAgYABgQPAAcABwIEFQMFAAUVBwEABgIJDwMrMQArMCERIREnESERAQAEACH8QgUA+wAhBL77QgABArAAAAUvBZ4ALwAZQBIBFQcQARIsGgIUBSMEBQExDwMrKz8uMAEzMhcWFREUFxY7ATIXFhURFAcGIyEiJyY1ETQ3NjMyNzY1ETQnJiMiJyY9ATQ3NgMAoCMWFxYZIKAhGRYWGSH+ISEWGRkWISMWFxcWIyEWGRkWBZ4XFiP9gSEWGRcWI/4hGxobGxobAd8jFhcZFiEBjyMXFhkWIVAjFhcAAAECsAAABS8FngA5ADpAMg4BMQAGJQEOJwoBBiABFA4eBwEHAwQqAS0QCQYBFBktCAU2ATg0JSAEFBAjAwYCOw8DKysxACswASEyFxYVERQHBiMhIgcGFREUFxYzITIXFhUUBwYjISInJjURNDc2MyEyNzY1ETQnJiMhIicmNTQ3NgMAAd8hGRYWGSH+wR8ZGBgZHwE/IRkWFhkh/iEhFhkZFiEBPyEZFhYZIf7BIRYZGRYFnhcWI/2BIRYZFxYj/sEfGRgXFiMhFhkZFiECfyMWFxYZIQE/JRQXGRYhIxYXAAABAhAAAAUvBZ4AQQAsQCYOMCYABjUBPQEOHBMKBgkOAQcABwMEKxgFAxIPARM+IgIFAUMPAysrKzApASInJjU0NzYzITI3NjURNCcmIyEiJyY1NDc2MyEyNzY1ETQnJiMhIicmNTQ3NjMhMhcWFREUFxYzMhcWFREUBwYE3/2BIRYZGRYhAUAjFhcXFiP+wCEWGRkWIQFAIxYXFxYj/sAhFhkZFiEB3yEZFhkWISEZFhYZGRYhIxYXGBkfAT8jFhcZFiEjFhcYGR8BPyMWFxkWISMWFxcUJf3RHxkYFxYj/dEhFhkAAAEBcQAABS8FngAwAClAICgBDQEOHwoRBgEEFQEHBQETLSMCBQ0BExkQAQYCMg8DKzEAPy4rMCEjIicmPQE0JyYjISInJjURNDc2OwEyFxYVERQXFjsBMjc2NTQ3NjsBMhcWFREUBwYE36AgGRYXFCX+ISEZFhYZIZ8hGRYZFiGgIxYXFhkgoCEZFhYZGRYhoCAZFhcZIAO/IxYXFxYj/OEhFhkZFiEjFhcXFiP+ISEWGQABAhAAAAUvBZ4AOQA7QDMbAQ4eJgEGFgEOMBMBBgkOAQcABwMEKQwCDywJNgEUIg8IBQUBGxYHAwQULBkDBgI7DwMrKzEAKzApASInJjU0NzYzITI3NjURNCcmIyEiJyY1ETQ3NjMhMhcWFRQHBiMhIgcGFREUFxYzITIXFhURFAcGBN/9gSEWGRkWIQHfIRkWFhkh/iEhFhkZFiECfyEZFhYZIf4hIRYZGRYhAd8hGRYWGRkWISMWFxYZIQE/JRQXGRYhAn8jFhcXFiMhFhkXFiP+wR8ZGBcWI/2BIRYZAAIBcQAABS8FngAwAEQAOkAxKCYCAQoJDh8BAAYOCjwABjIOFQcABwMEJggDAzcGCSQBFBA3BAVBARQGGggGAkYPAysrMQArKzABIyIHBhURFBcWMyEyFxYVERQHBiMhIicmNRE0NzYzITIXFh0BFAcGIyInJj0BNCcmAyEyNzY9ATQnJiMhIgcGHQEUFxYDAKAhFhkZFiECfyEZFhYZIfziIRkWFhkhAd8jFhcXFiMfGRgXFsMB3yEZFhYZIf4hIRYZGRYE/hcWI/4hIRYZFxYj/iEhFhkZFiEE/iMWFxcWI/AhFhkZFiFQIxYX+6IWGSGfIxcWFhkhnx8ZGAAAAQIQAAAFLwWeADgAO0AxNwEOAScBBgEEMBMHHQsCIg4pARgrAgkKARQGIgEFHBoCFA4YAQY3ARQrNQEGAzoPAysqMQA/LiswASEyFxYVERQHBg8BDgEVERQHBiMiJyY1ETQ3Nj8BNjc2PQE0JyYjISIHBh0BFAcGIyInJjURNDc2AmACfyEZFhARHMUdIBcWIx8ZGBARHMUdEBAWGSH+wSEWGRYZISEWGRkWBZ4XFiP+CBsUFwhUCCkd/eohFhkZFiECfxoXFAlUCBQVHPAlFBcXFiOgIBkXFxkgAUAjFhcAAAMA0QAABS8FngAlADkATQA1QC4OATYABiwhAkoZAg4GDgoGFgFADhQHAQcDBEUBEw8xAgU7ARYBEycZCQYCTw8DKzEAKzABITIXFhURFBcWMzIXFhURFAcGIyEiJyY1ETQ3NjMyNzY1ETQ3NhcRFBcWMyEyNzY1ETQnJiMhIgcGGQEUFxYzITI3NjURNCcmIyEiBwYBwQJ+IRkWGRYhIRkWFhkh/EIhFxgYFyEjFhcWGXAZFiEBQCMWFxcWI/7AIRYZGRYhAUAjFhcXFiP+wCEWGQWeFxQl/dEfGRgXFiP90SEWGRkWIQIvIxYXGBkfAi8jFhfw/sEfGRgYGR8BPyMWFxcW/V7+wR8ZGBgZHwE/IxYXFxYAAgFxAAAFLwWeABMAMQAtQCQOFQEABg4LKAAGAgQfBwMBIwYJEA0CExojAQUUBi4ABgIzDwMrKzEAPyswASEiBwYVERQXFjMhMjc2NRE0JyYlITIXFhURFAcGKwEiJyY1ETQnJiMhIicmNRE0NzYEP/4hIRYZGRYhAd8hGRYWGf1hAx4hGRYWGSGgIBkWFxYj/iEhGRYWGQT+FxYj/sEfGRgWGSEBPyUUF6AXFiP7AiEWGRkWIQHfIxYXGRYhAn8jFhcAAAIA0QAABS8FngAXACgAKEAhJgsCDgcDAgYdDhQHAAcCBCERAhQOCQIFFBkBAAYCKg8DKzEAKzATETQ3PgEzITIXFhcWFREUBgcGIyEiJiYTERQWMyEyNjURNCcmIyEiBtErK5NWAeBWSUorK1ZKSVb+IFaTVqBeQQHgQV4vLUP+IEFeAT8DH1RMSlYrK0pMVPzhVpMrK1aTA3X84UFeXkEDH0IvL14AAAMA0QAABS8FngATACYAOgAsQCUXFQIMAQsBBh8cAigMMgcBBwIELQE3AREGEAoFExokAAYCPA8DKzEAKzABITIXFhURFAcGIyEiJyY1ETQ3NgUzMhcWFREUBwYrASInJjURNDYBITIXFhURFAcGIyEiJyY1ETQ3NgOgAT8hGRYWGSH+wR8ZGBgZ/aCgIBkWFhkgoCEXGC8CoAE/IRkWFhkh/sEfGRgYGQWeFxYj/sAgGRcXGSABQCMWF/AWFyP84SIXFhYZIAMfIy39MRYZIf7BIRYZGRYhAT8hGRYAAAMA0QGPBS8EDgASACQAOAAiQBswJiEYCgEGExQUHQAFEys1AAYTBQ8ABgM6DwMrMQAqMAEzMhYVERQHBisBIicmNRE0NzYFERQHBiMiJyY1ETQ3NjMyFxYlMzIXFhURFAcGKwEiJyY1ETQ3NgEhoCItFhkgoCEXGBYZBC8WGSEhFhkXFiMjFxb90aAlFBcXFiOgIRYZFxYEDi0j/iEjFhcZFiEB3yEZFlD+ISEWGRkWIQHfIRkWFhkvFhkh/iEhFhkZFiEB3yEZFgADANEA8AUvBU4AEQAiADYAIkAbLiQfFw4FBhMRKTMABRQBCgAGFBMcAAYDOA8DKzEAKjABERQHBiMiJyY1ETQ3NjMyFxYFERQHBiMiJyY1ETQ2MzIXFiUhMhcWFREUBwYjISInJjURNDc2ArAWGSEhFhkZFiEhGRb+wRcWIyEXGC8hIxYXAi8BPyEZFhYZIf7BHxkYGBkEXvzhIBkWFhkgAx8jFxYWFyP84SAZFhYZIAMfIy0WF80XFiP+IR8ZGBgZHwHfIxYXAAMA0QAABS8FngATACcAOQAkQBw2LRULAQUTHwcTBhAABRQpMgAGExokAAYDOw8DKzEAPyowATMyFxYVERQHBisBIicmNRE0NzYBMzIXFhURFAcGKwEiJyY1ETQ3NgERFAcGIyInJjURNDc2MzIXFgQ/oCEZFhYZIaAgGRYWGf0CoCAZFhYZIKAhFxgYFwJQFxYjIRYZGRYhIxYXBZ4XFiP+IR8ZGBgZHwHfIxYX/OEXFCX+ISMWFxkWIQHfIxYXAY/+ISEWGRkWIQHfIRkWFhkAAAMA0QGPBS8EDgASACQAOAAiQBswJiEYCgEGExQUHQAFEys1AAYTBQ8ABgM6DwMrMQAqMAEzMhYVERQHBisBIicmNRE0NzYFERQHBiMiJyY1ETQ3NjMyFxYlMzIXFhURFAcGKwEiJyY1ETQ3NgEhoCItFhkgoCEXGBYZBC8WGSEhFhkXFiMjFxb90aAlFBcXFiOgIRYZFxYEDi0j/iEjFhcZFiEB3yEZFlD+ISEWGRkWIQHfIRkWFhkvFhkh/iEhFhkZFiEB3yEZFgAABgABAAAAAAAAAAAABgACsAYAArAGAAIQBgABcQYAAhAGAAFxBgACEAYAANEGAAFxBgAA0QYAANEAAAAABgAA0QAAAAAGAADRBgAA0QAAAAAGAADRBgAAAAABAAAAFgBOAAMAAAAAAAIADAAGABYAAAB2ADsABAABAAEAAAVO/+wAAAYAANEA0QUvAAEAAAAAAAAAAAAAAAAAAAAWAAAAAAGQAAUAAAGaAXEAAAAAAZoBcQAAAqcAZgISAAACCwUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAgJmsFTgAAAAAFngAAAAA=') format('truetype');
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* Print page: US Letter, landscape is NOT used.
+       Business check stock is typically 8.5" x 11" with perforations.
+       The check area occupies the top 3.5" (one third of the page).
+       We position the check at the exact top of the printable area.
+    */
+    @page {
+      size: 8.5in 11in;
+      margin: 0;
+    }
+
+    html, body { margin: 0; padding: 0; }
+
+    .print-body {
+      margin: 0;
+      padding: 0;
+      background: white;
+      font-family: 'DM Sans', Arial, sans-serif;
+    }
+
+    /* Page area: full 8.5" wide */
+    .print-page {
+      width: 8.5in;
+      height: 11in;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 0; /* no top margin — align to top of check stock */
+    }
+
+    /* The check itself: 8.0" wide × 3.25" tall (standard business top-check) */
+    .check {
+      width: 8.0in;
+      height: 3.5in;
+      background: transparent;
+      border: none;
+      position: relative;
+      overflow: hidden;
+      font-family: 'DM Sans', Arial, sans-serif;
+      color: #1a1612;
+    }
+
+    .check::before { display: none; }
+    .check-watermark { display: none; }
+    .check-topbar { display: none; }
+
+    /* Company info */
+    .check-header {
+      position: absolute;
+      top: 0.12in;
+      left: 0.18in;
+      right: 1.8in;
+      z-index: 1;
+    }
+
+    .check-company-name {
+      font-size: 13pt;
+      font-weight: 700;
+      color: #1a3a5c;
+      line-height: 1.2;
+    }
+
+    .check-company-address {
+      font-size: 8pt;
+      color: #555;
+      line-height: 1.45;
+      margin-top: 2pt;
+    }
+
+    /* Check number */
+    .check-number {
+      position: absolute;
+      top: 0.12in;
+      right: 0.18in;
+      font-family: 'DM Mono', monospace;
+      font-size: 10pt;
+      font-weight: 500;
+      color: #444;
+      z-index: 1;
+    }
+
+    .check-bank-info {
+      position: absolute;
+      top: 0.35in;
+      right: 0.18in;
+      text-align: right;
+      z-index: 1;
+    }
+
+    .check-bank-name {
+      font-size: 8.5pt;
+      font-weight: 700;
+      color: #1a3a5c;
+      text-transform: uppercase;
+      letter-spacing: 0.5pt;
+    }
+
+    .check-bank-sub {
+      font-size: 7pt;
+      color: #777;
+      margin-top: 1pt;
+    }
+
+    /* Separator lines */
+    .check-hline { display: none; }
+
+    /* Date line */
+    .check-dateline {
+      position: absolute;
+      top: 0.72in;
+      right: 0.18in;
+      display: flex;
+      align-items: baseline;
+      gap: 6pt;
+      z-index: 1;
+    }
+
+    .check-dateline label {
+      font-size: 8pt;
+      color: #555;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5pt;
+    }
+
+    .check-dateline .date-value {
+      font-size: 10pt;
+      color: #1a1612;
+      border-bottom: 0.5pt solid #aaa;
+      min-width: 1.3in;
+      padding-bottom: 1pt;
+      text-align: right;
+    }
+
+    /* Pay to */
+    .check-payline {
+      position: absolute;
+      top: 0.95in;
+      left: 0.18in; right: 0.18in;
+      display: flex;
+      align-items: baseline;
+      gap: 0;
+      z-index: 1;
+    }
+
+    .check-payline label {
+      font-size: 7.5pt;
+      color: #555;
+      white-space: nowrap;
+      margin-right: 8pt;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5pt;
+      flex-shrink: 0;
+    }
+
+    .payee-line {
+      flex: 1;
+      font-size: 11pt;
+      color: #1a1612;
+      font-weight: 600;
+      border-bottom: 0.5pt solid #bbb;
+      padding-bottom: 2pt;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .amount-box {
+      margin-left: 12pt;
+      border: 1pt solid #888;
+      border-radius: 2pt;
+      padding: 1pt 8pt 1pt 16pt;
+      min-width: 1.2in;
+      text-align: right;
+      font-size: 12pt;
+      font-weight: 700;
+      color: #1a1612;
+      font-family: 'DM Mono', monospace;
+      background: rgba(255,255,255,0.7);
+      position: relative;
+      flex-shrink: 0;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .amount-box::before {
+      content: '$';
+      position: absolute;
+      left: 5pt;
+      font-size: 9pt;
+      top: 50%; transform: translateY(-50%);
+      color: #555;
+    }
+
+    /* Written amount */
+    .check-written {
+      position: absolute;
+      top: 1.22in;
+      left: 0.18in; right: 0.18in;
+      display: flex;
+      align-items: baseline;
+      z-index: 1;
+    }
+
+    .check-written label {
+      font-size: 7pt;
+      color: #666;
+      white-space: nowrap;
+      margin-right: 6pt;
+      flex-shrink: 0;
+    }
+
+    .written-line {
+      flex: 1;
+      font-size: 10pt;
+      color: #1a1612;
+      border-bottom: 0.5pt solid #bbb;
+      padding-bottom: 2pt;
+      font-style: italic;
+    }
+
+    .written-suffix {
+      font-size: 8pt;
+      color: #666;
+      white-space: nowrap;
+      margin-left: 4pt;
+      padding-bottom: 2pt;
+    }
+
+    /* Bottom section */
+    .check-bottom {
+      position: absolute;
+      top: 1.55in;
+      left: 0.18in; right: 0.18in;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      z-index: 1;
+    }
+
+    .check-memo-area label {
+      display: block;
+      font-size: 7pt;
+      color: #777;
+      text-transform: uppercase;
+      letter-spacing: 0.5pt;
+      margin-bottom: 2pt;
+      font-weight: 600;
+    }
+
+    .memo-line {
+      font-size: 9pt;
+      color: #333;
+      border-bottom: 0.5pt solid #bbb;
+      padding-bottom: 2pt;
+      min-width: 2in;
+      max-width: 3in;
+    }
+
+    .check-sig-area {
+      text-align: right;
+      min-width: 2.2in;
+    }
+
+    .sig-line {
+      border-bottom: 1pt solid #333;
+      margin-bottom: 3pt;
+      height: 0.22in;
+    }
+
+    .sig-label {
+      font-size: 7pt;
+      color: #777;
+      text-align: center;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5pt;
+    }
+
+    /* MICR line — critical for bank processing
+       MICR E-13B font should be used if installed.
+       Fallback: monospace with wide tracking.
+       The MICR line sits 0.2" from bottom of check. */
+    .check-micr {
+      position: absolute;
+      bottom: 0.1875in;
+      left: 0.18in; right: 0.18in;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 2;
+    }
+
+    .micr-text {
+      font-family: 'MICR E13B', monospace;
+      font-size: 12pt;
+      letter-spacing: 2.5pt;
+      color: #000000;
+      line-height: 1;
+      /* Magnetic ink simulation — keep black */
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+  </style>
+
+  <script src="app.js"></script>
+</body>
+</html>
