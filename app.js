@@ -143,7 +143,6 @@ function renderCheck(v) {
   <!-- Bank name (top right) -->
   <div style="position:absolute;top:30px;right:18px;text-align:right;z-index:1;">
     <div class="check-bank-name" style="font-size:11px;">${escHtml(v.bankName) || '<span style="color:#000;">Bank Name</span>'}</div>
-    ${fracRoute ? `<div class="check-bank-sub" style="font-size:9px;">${fracRoute}</div>` : ''}
   </div>
 
   <!-- Date line -->
