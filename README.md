@@ -10,6 +10,16 @@ No backend. Nothing sent anywhere.
 
 **Tested with:** [EnDoc Diamond Blue check stock](https://www.amazon.com/Endocs-Computer-Check-Paper-Compatible/dp/B084BXRVZT/)
 
+## Run it locally
+
+```bash
+git clone https://github.com/jasonroland/check-printer.git
+cd check-printer
+open index.html
+```
+
+No install or build step needed — it's a static HTML file.
+
 ---
 
 MIT — Built by [Chill Labs](https://chilllabs.vercel.app)
