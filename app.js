@@ -102,6 +102,7 @@ function getValues() {
     memo:        document.getElementById('memo').value.trim(),
     sigLabel:    document.getElementById('sigLabel').value.trim() || 'Authorized Signature',
     micrOffset:  parseFloat(document.getElementById('micrOffset').value) || 0,
+    micrOffsetX: parseFloat(document.getElementById('micrOffsetX').value) || 0,
   };
 }
 
@@ -180,7 +181,7 @@ function renderCheck(v) {
   </div>
 
   <!-- MICR Line -->
-  <div style="position:absolute;bottom:${(0.1875 + v.micrOffset).toFixed(4)}in;left:0.146in;right:0.146in;z-index:2;">
+  <div style="position:absolute;bottom:${(0.1875 + v.micrOffset).toFixed(4)}in;left:${(0.146 + v.micrOffsetX).toFixed(4)}in;right:${(0.146 - v.micrOffsetX).toFixed(4)}in;z-index:2;">
     <div class="micr-text">${micrLine}</div>
   </div>
 

@@ -8,6 +8,12 @@ Print checks from your browser. Fill in your info, preview, and print onto blank
 
 No backend. Nothing sent anywhere.
 
+## Real printed check
+
+Used this to print real checks — they deposited without any issues.
+
+![Printed check](demo-printed-check.png)
+
 **Tested with:** [EnDoc Diamond Blue check stock](https://www.amazon.com/Endocs-Computer-Check-Paper-Compatible/dp/B084BXRVZT/)
 
 ## Run it locally
